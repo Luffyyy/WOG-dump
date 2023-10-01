@@ -146,7 +146,7 @@ def dump_keys_threaded(weapon_list):
             key = keys[weapon]
             if key is not None:
                 f.write(f"{weapon} {key}\n")
-            console_log(f"{weapon} {key}")
+            console_log(f"{weapon} {key}\n")
 
 
 def download_file(url, filename):
