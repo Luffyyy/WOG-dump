@@ -212,6 +212,7 @@ def load_keys():
 
 def decrypt_all(keys):
     assets = os.listdir(ASSETS_DIR)
+    assets.remove("spider_gen.unity3d")
     for asset in assets:
         key = keys[asset.split(".")[0]] + "World of Guns: Gun Disassembly"
         key = hashlib.md5(key.encode()).hexdigest()
