@@ -17,9 +17,11 @@ This script allows you to download, decrypt and unpack models from the game [Wor
 4. Ez profit
 
 ### 🧑‍🏭 Usage
-1. Install requirements `pip install -r requirements.txt`
-2. Run `python wog_dump.py`
-3. Unpack assets in `decrypted` dir by [AssetStudio](https://github.com/Perfare/AssetStudio)
+1. Clone repository - `git clone https://github.com/hampta/WOG-dump`
+2. Go to dirictory - `cd WOG-dump`
+3. Install requirements - `pip install -r requirements.txt`
+4. Run - `python wog_dump.py`
+5. Unpack assets in `decrypted` dir by [AssetStudio](https://github.com/Perfare/AssetStudio)
 
 ### ➕ Addtional
 Use xor: `xor <encrypted_file> <key> <output_file>`
