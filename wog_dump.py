@@ -3,7 +3,7 @@ import hashlib
 import os
 import subprocess
 import sys
-import threading
+from concurrent.futures import ThreadPoolExecutor
 from io import BytesIO
 
 import requests
@@ -28,7 +28,8 @@ def download_weaponlist():
         current_size = os.path.getsize(f"{ASSETS_DIR}/spider_gen.unity3d")
         server_size = int(requests.head(
             "https://data1eu.ultimate-disassembly.com/uni2018/spider/spider_gen.unity3d").headers["Content-Length"])
-        console_log(f"Current size: {current_size} | Server size: {server_size}\n")
+        console_log(
+            f"Current size: {current_size} | Server size: {server_size}\n")
         if current_size == server_size:
             console_log("Asset up to date\n")
             return
@@ -53,21 +54,15 @@ def unpack_weaponlist():
                 with open("weapons.txt", "w") as f:
                     text = data.text.replace("\r", "")
                     lines = text.split("\n")
-
                     # remove empty lines
                     lines = [line for line in lines if line != ""]
-
                     # remove lines starting with #
-                    lines = [
-                        line for line in lines if not line.startswith("#")]
-
+                    lines = [line for line in lines if not line.startswith("#")]
                     # remove .png and add to list
                     for line in lines:
                         weapon_list.append(line.split(".png")[0])
-
                     #  remove blacklisted
                     weapon_list = remove_blacklisted(weapon_list)
-
                     text = "\n".join(weapon_list)
                     f.write(text)
     console_log("Unpacked weapons.txt\n")
@@ -80,10 +75,8 @@ def remove_blacklisted(weapon_list):
     weapon_black_list = ["hk_g28", "drag_racing",
                          "tac_50", "zis_tmp", "groza_1", "glock_19x", "cat_349f"]
 
-    weapon_list = [
-        weapon for weapon in weapon_list if not weapon in black_list]
-    weapon_list = [
-        weapon for weapon in weapon_list if not weapon in weapon_black_list]
+    weapon_list = [weapon for weapon in weapon_list if not weapon in black_list]
+    weapon_list = [weapon for weapon in weapon_list if not weapon in weapon_black_list]
     return weapon_list
 
 
@@ -124,7 +117,7 @@ def get_key(asset_name):
     return key
 
 
-def dump_keys_threaded(weapon_list):
+def dump_keys_threaded(weapon_list: list):
     keys = {}
 
     def get_key_threaded(asset_name):
@@ -132,38 +125,36 @@ def dump_keys_threaded(weapon_list):
         console_log(
             f"Gettings keys {weapon_list.index(asset_name) + 1}/{len(weapon_list)}\r")
         keys.update({asset_name: key})
-    threads = []
-    for weapon in weapon_list:
-        while threading.active_count() > MAX_THREADS:
-            pass
-        thread = threading.Thread(target=get_key_threaded, args=(weapon,))
-        threads.append(thread)
-        thread.start()
-    for thread in threads:
-        thread.join()
+
+    with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
+        for weapon in weapon_list:
+            executor.submit(get_key_threaded, weapon)
+
     with open("keys.txt", "w") as f:
         for weapon in weapon_list:
             key = keys[weapon]
             if key is not None:
                 f.write(f"{weapon} {key}\n")
-            console_log(f"{weapon} {key}\n")
+    console_log("\n")
 
 
 def download_file(url, filename):
     r = requests.get(url, stream=True)
     file_size = int(r.headers["Content-Length"])
-    if r.status_code == 200:
-        with open(filename, "wb") as f:
-            for chunk in r.iter_content(1024):
-                console_log(f"Downloading {filename} {round(f.tell()/file_size*100, 2)}% {round(f.tell()/1024/1024, 2)}MB/{round(file_size/1024/1024, 2)}MB\r")
-                f.write(chunk)
+    if r.status_code != 200:
+        console_log(f"Error downloading {filename}\n")
+        return
+    with open(filename, "wb") as f:
+        for chunk in r.iter_content(1024):
+            console_log(
+                f"Downloading {filename} {round(f.tell()/file_size*100, 2)}% {round(f.tell()/1024/1024, 2)}MB/{round(file_size/1024/1024, 2)}MB\r")
+            f.write(chunk)
 
     console_log(f"Downloaded {filename}")
 
 
 def get_asset_size(asset):
-    r = requests.head(
-        f"https://data1eu.ultimate-disassembly.com/uni2018/{asset}.unity3d")
+    r = requests.head(f"https://data1eu.ultimate-disassembly.com/uni2018/{asset}.unity3d")
     return int(r.headers["Content-Length"])
 
 
@@ -173,19 +164,15 @@ def check_for_updates_threaded(weapon_list):
     def check_for_updates(asset):
         current_size = os.path.getsize(f"{ASSETS_DIR}/{asset}.unity3d")
         server_size = get_asset_size(asset)
-        console_log(f"Checking for updates {weapon_list.index(asset) + 1}/{len(weapon_list)}\r")
+        console_log(
+            f"Checking for updates {weapon_list.index(asset) + 1}/{len(weapon_list)}\r")
         if current_size != server_size or not os.path.exists(f"{ASSETS_DIR}/{asset}.unity3d"):
             to_download.append(asset)
 
-    threads = []
-    for weapon in weapon_list:
-        while threading.active_count() > MAX_THREADS:
-            pass
-        thread = threading.Thread(target=check_for_updates, args=(weapon,))
-        threads.append(thread)
-        thread.start()
-    for thread in threads:
-        thread.join()
+    with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
+        for weapon in weapon_list:
+            executor.submit(check_for_updates, weapon)
+
     return to_download
 
 
@@ -203,10 +190,11 @@ def download_all(weapon_list):
 def load_keys():
     keys = {}
     with open("keys.txt", "r") as f:
-        for line in f.readlines():
-            asset_name = line.split(" ")[0]
-            key = line.split(" ")[1].replace("/n", "").strip()
-            keys.update({asset_name: key})
+        lines = f.readlines()
+    for line in lines:
+        asset_name = line.split(" ")[0]
+        key = line.split(" ")[1].replace("/n", "").strip()
+        keys.update({asset_name: key})
     return keys
 
 
@@ -233,7 +221,9 @@ def main():
     download_weaponlist()
     unpack_weaponlist()
     weapon_list = get_weapon_list()
-    dump_keys_threaded(weapon_list)
+    asnwer = input("[WOG DUMP] Update decrypting keys? (y/n): ")
+    if asnwer.lower() == "y":
+        dump_keys_threaded(weapon_list)
     console_log(f"Found {len(weapon_list)} weapons\n")
     asnwer = input("[WOG DUMP] Checking for updates? (y/n): ")
     if asnwer == "y":
