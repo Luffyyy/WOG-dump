@@ -33,10 +33,10 @@ pip3 install -r requirements.txt                # Install requirements
 python3 wog_dump.py                             # Run
 ```
 
-- Unpack assets in `decrypted` dir with [AssetStudio](https://github.com/Perfare/AssetStudio)
+- Unpack assets in `decrypted` folder with [AssetStudio](https://github.com/Perfare/AssetStudio)
 
 ## ➕ Addtional
-Use xor decryptor: 
+Use xor decrypter: 
 ```bash
 # Windows 64 bit
 ./bin/windows/64bit/xor.exe <encrypted_file> <key> <output_file>
