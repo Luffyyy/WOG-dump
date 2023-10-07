@@ -3,6 +3,7 @@ import hashlib
 import os
 import subprocess
 import sys
+import platform
 from concurrent.futures import ThreadPoolExecutor
 from io import BytesIO
 
@@ -13,6 +14,14 @@ ASSETS_DIR = os.path.join(os.path.dirname(__file__), "assets")
 ENCTYPTED_DIR = os.path.join(os.path.dirname(__file__), "encrypted")
 DECRYPTED_DIR = os.path.join(os.path.dirname(__file__), "decrypted")
 MAX_THREADS = 4
+
+system = platform.system().lower()
+arch = platform.architecture()
+
+XOR_BIN = f"./bin/{system}/{arch[0]}/xor"
+
+if system == "windows":
+    XOR_BIN += ".exe"
 
 for dir in [ASSETS_DIR, ENCTYPTED_DIR, DECRYPTED_DIR]:
     if not os.path.exists(dir):
