@@ -160,3 +160,4 @@ db.sqlite3-wal
 assets/
 decrypted/
 encrypted/
+weapons.txt

@@ -4,6 +4,7 @@ import os
 import subprocess
 import sys
 import platform
+
 from concurrent.futures import ThreadPoolExecutor
 from io import BytesIO
 import time
@@ -148,19 +149,19 @@ def dump_keys_threaded(weapon_list: list):
     console_log("\n")
 
 
-def download_file(url, filename):
+def download_file(url, filename, current, total):
     r = requests.get(url, stream=True)
     file_size = int(r.headers["Content-Length"])
     if r.status_code != 200:
-        console_log(f"Error downloading {filename}\n")
+        console_log(f"[{current}/{total}] Error downloading {filename}                  \r")
         return
     with open(filename, "wb") as f:
         for chunk in r.iter_content(1024):
             console_log(
-                f"Downloading {filename} {round(f.tell()/file_size*100, 2)}% {round(f.tell()/1024/1024, 2)}MB/{round(file_size/1024/1024, 2)}MB\r")
+                f"[{current}/{total}] [{round(f.tell()/file_size*100, 2)}% | {round(f.tell()/1024/1024, 2)}MB/{round(file_size/1024/1024, 2)}MB] Downloading {filename} \r")
             f.write(chunk)
 
-    console_log(f"Downloaded {filename}")
+    console_log(f"[{current}/{total}] Downloaded {filename}                                     \r")
 
 
 def get_asset_size(asset):
@@ -170,6 +171,7 @@ def get_asset_size(asset):
 
 def check_for_updates_threaded(weapon_list):
     to_download = []
+
 
     def check_for_updates(asset):
         console_log(f"Checking for updates {weapon_list.index(asset) + 1}/{len(weapon_list)}\r")
@@ -190,12 +192,11 @@ def check_for_updates_threaded(weapon_list):
 
 def download_all(weapon_list):
     to_download = check_for_updates_threaded(weapon_list)
-    for asset in to_download:
+    total_downloads = len(to_download)
+    for asset, i in zip(to_download, range(total_downloads)):
         url = f"https://data1eu.ultimate-disassembly.com/uni2018/{asset}.unity3d"
         filename = f"{ASSETS_DIR}/{asset}.unity3d"
-        console_log(
-            f"Downloaded {asset} {to_download.index(asset) + 1}/{len(to_download)}\r")
-        download_file(url, filename)
+        download_file(url, filename, i + 1, total_downloads)
     console_log("Downloaded all assets\n")
 
 
