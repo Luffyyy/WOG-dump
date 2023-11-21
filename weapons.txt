@@ -265,3 +265,6 @@ boberg_xr9
 margolin_sport
 pp_90
 mauser_hsc
+fnx_45
+korth_super_sport_alx
+avs_36
