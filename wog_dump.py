@@ -6,6 +6,7 @@ import sys
 import platform
 from concurrent.futures import ThreadPoolExecutor
 from io import BytesIO
+import time
 
 import requests
 import UnityPy
@@ -95,7 +96,7 @@ def get_weapon_list():
 
 
 def get_key(asset_name):
-    data = f"query=3&model={asset_name}&mode=FIELD_STRIP&need_details=1&ver=2.2.1z5&uver=2019.2.18f1&dev=e35c060a502dd9fdee3bfa107ab0cc24477f6a1a&session=35&id=5390315&time=169611572"
+    data = f"query=3&model={asset_name}&mode=FIELD_STRIP&need_details=1&ver=2.2.1z5&uver=2019.2.18f1&dev=e35c060a502dd9fdee3bfa107ab0cc24477f6a1a&session=37&id=5390315&time={int(time.time())}"
     headers = {
         'Content-Type': 'application/octet-stream',
         'User-Agent': 'UnityPlayer/2019.2.18f1 (UnityWebRequest/1.0, libcurl/7.52.0-DEV)',
@@ -171,11 +172,13 @@ def check_for_updates_threaded(weapon_list):
     to_download = []
 
     def check_for_updates(asset):
+        console_log(f"Checking for updates {weapon_list.index(asset) + 1}/{len(weapon_list)}\r")
+        if not os.path.exists(f"{ASSETS_DIR}/{asset}.unity3d"):
+            to_download.append(asset)
+            return
         current_size = os.path.getsize(f"{ASSETS_DIR}/{asset}.unity3d")
         server_size = get_asset_size(asset)
-        console_log(
-            f"Checking for updates {weapon_list.index(asset) + 1}/{len(weapon_list)}\r")
-        if current_size != server_size or not os.path.exists(f"{ASSETS_DIR}/{asset}.unity3d"):
+        if current_size != server_size:
             to_download.append(asset)
 
     with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
@@ -219,12 +222,15 @@ def decrypt_all(keys):
         for obj in env.objects:
             if obj.type.name == "TextAsset":
                 data = obj.read()
+                if os.path.exists(f"{DECRYPTED_DIR}/{data.name}.unity3d") and os.path.getsize(f"{ENCTYPTED_DIR}/{data.name}.bytes") == data.script.nbytes:
+                    console_log(f"Already decrypted - {data.name}.unity3d\n")
+                    continue
                 with open(f"{ENCTYPTED_DIR}/{data.name}.bytes", "wb") as f:
                     f.write(bytes(data.script))
                 # # decrypt // usage: xor <input> <key> <output>
                 subprocess.call(
-                    ["xor", f"{ENCTYPTED_DIR}/{data.name}.bytes", key, f"{DECRYPTED_DIR}/{data.name}.unity3d"])
-
+                    [XOR_BIN, f"{ENCTYPTED_DIR}/{data.name}.bytes", key, f"{DECRYPTED_DIR}/{data.name}.unity3d"])
+                continue
 
 def main():
     download_weaponlist()
