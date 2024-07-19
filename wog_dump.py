@@ -20,8 +20,6 @@ MAX_THREADS = 4
 system = platform.system().lower()
 arch = platform.machine().lower()
 
-print(system, arch)
-
 XOR_BIN = f"./bin/{system}/{arch}/xor" 
 
 if system == "windows":
