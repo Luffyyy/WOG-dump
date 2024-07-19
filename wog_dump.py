@@ -20,7 +20,9 @@ MAX_THREADS = 4
 system = platform.system().lower()
 arch = platform.machine().lower()
 
-XOR_BIN = f"./bin/{system}/{arch[0]}/xor" 
+print(system, arch)
+
+XOR_BIN = f"./bin/{system}/{arch}/xor" 
 
 if system == "windows":
     XOR_BIN += ".exe"
@@ -223,9 +225,10 @@ def decrypt_all(keys):
         for obj in env.objects:
             if obj.type.name == "TextAsset":
                 data = obj.read()
-                if os.path.exists(f"{DECRYPTED_DIR}/{data.name}.unity3d") and os.path.getsize(f"{ENCTYPTED_DIR}/{data.name}.bytes") == data.script.nbytes:
-                    console_log(f"Already decrypted - {data.name}.unity3d\n")
-                    continue
+                if os.path.exists(f"{DECRYPTED_DIR}/{data.name}.unity3d"):
+                    if os.path.getsize(f"{ENCTYPTED_DIR}/{data.name}.bytes") == data.script.nbytes:
+                        console_log(f"Already decrypted - {data.name}.unity3d\n")
+                        continue
                 with open(f"{ENCTYPTED_DIR}/{data.name}.bytes", "wb") as f:
                     f.write(bytes(data.script))
                 # # decrypt // usage: xor <input> <key> <output>
