@@ -18,9 +18,9 @@ DECRYPTED_DIR = os.path.join(os.path.dirname(__file__), "decrypted")
 MAX_THREADS = 4
 
 system = platform.system().lower()
-arch = platform.architecture()
+arch = platform.machine().lower()
 
-XOR_BIN = f"./bin/{system}/{arch[0]}/xor"
+XOR_BIN = f"./bin/{system}/{arch[0]}/xor" 
 
 if system == "windows":
     XOR_BIN += ".exe"
