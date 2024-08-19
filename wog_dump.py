@@ -84,7 +84,8 @@ def remove_blacklisted(weapon_list):
                   "shooting_06", "shooting_07", "shooting_08", "shooting_09", "shooting_10"]
     # OMG unreleased guns
     weapon_black_list = ["hk_g28", "drag_racing",
-                         "tac_50", "zis_tmp", "groza_1", "glock_19x", "cat_349f"]
+                         "tac_50", "zis_tmp", "groza_1", "glock_19x", "cat_349f",
+                         "fnx_45", "korth_super_sport_alx", "canik_tp9"]
 
     weapon_list = [weapon for weapon in weapon_list if not weapon in black_list]
     weapon_list = [weapon for weapon in weapon_list if not weapon in weapon_black_list]
@@ -97,13 +98,13 @@ def get_weapon_list():
 
 
 def get_key(asset_name):
-    data = f"query=3&model={asset_name}&mode=FIELD_STRIP&need_details=1&ver=2.2.1z5&uver=2019.2.18f1&dev=e35c060a502dd9fdee3bfa107ab0cc24477f6a1a&session=37&id=5390315&time={int(time.time())}"
+    data = f"query=3&model={asset_name}&mode=FIELD_STRIP&need_details=1&ver=2.2.2z5&uver=2022.3.23f1&dev=e35c060a502dd9fdee3bfa107ab0cc24477f6a1a&session=48&id=5390315&time={int(time.time())}"
     headers = {
         'Content-Type': 'application/octet-stream',
-        'User-Agent': 'UnityPlayer/2019.2.18f1 (UnityWebRequest/1.0, libcurl/7.52.0-DEV)',
+        'User-Agent': 'UnityPlayer/2022.3.23f1 (UnityWebRequest/1.0, libcurl/8.5.0-DEV)',
         'Accept-Encoding': 'identity',
         'Accept': '*/*',
-        'X-Unity-Version': '2019.2.18f1',
+        'X-Unity-Version': '2022.3.23f1',
     }
     # request -> gzip
     data = bz2.compress(data.encode())
@@ -124,6 +125,7 @@ def get_key(asset_name):
     try:
         key = r.split("sync=")[1].split("&")[0]
     except IndexError:
+        console_log(f"Error getting key for {asset_name}\n")
         key = None
     return key
 
@@ -153,7 +155,7 @@ def download_file(url, filename, current, total):
     r = requests.get(url, stream=True)
     file_size = int(r.headers["Content-Length"])
     if r.status_code != 200:
-        console_log(f"[{current}/{total}] Error downloading {filename}                  \r")
+        console_log(f"[{current}/{total}] Error downloading {filename}                          \r")
         return
     with open(filename, "wb") as f:
         for chunk in r.iter_content(1024):
@@ -200,6 +202,17 @@ def download_all(weapon_list):
     console_log("Downloaded all assets\n")
 
 
+def download_and_decrypt_all(weapon_list, keys):
+    to_download = check_for_updates_threaded(weapon_list)
+    total_downloads = len(to_download)
+    for asset, i in zip(to_download, range(total_downloads)):
+        url = f"https://data1eu.ultimate-disassembly.com/uni2018/{asset}.unity3d"
+        filename = f"{ASSETS_DIR}/{asset}.unity3d"
+        download_file(url, filename, i + 1, total_downloads)
+        decrypt_single(keys, f"{asset}.unity3d")
+    console_log("Downloaded and decrypted all assets\n")
+
+
 def load_keys():
     keys = {}
     with open("keys.txt", "r") as f:
@@ -234,19 +247,41 @@ def decrypt_all(keys):
                     [XOR_BIN, f"{ENCTYPTED_DIR}/{data.name}.bytes", key, f"{DECRYPTED_DIR}/{data.name}.unity3d"])
                 continue
 
+def decrypt_single(keys, asset):
+    key = keys[asset.split(".")[0]] + "World of Guns: Gun Disassembly"
+    key = hashlib.md5(key.encode()).hexdigest()
+    env = UnityPy.load(f"{ASSETS_DIR}/{asset}")
+    for obj in env.objects:
+        if obj.type.name == "TextAsset":
+            data = obj.read()
+            if os.path.exists(f"{DECRYPTED_DIR}/{data.name}.unity3d"):
+                if os.path.getsize(f"{ENCTYPTED_DIR}/{data.name}.bytes") == data.script.nbytes:
+                    console_log(f"Already decrypted - {data.name}.unity3d\n")
+                    return
+            with open(f"{ENCTYPTED_DIR}/{data.name}.bytes", "wb") as f:
+                f.write(bytes(data.script))
+            # # decrypt // usage: xor <input> <key> <output>
+            subprocess.call(
+                [XOR_BIN, f"{ENCTYPTED_DIR}/{data.name}.bytes", key, f"{DECRYPTED_DIR}/{data.name}.unity3d"])
+            return
+
 def main():
     download_weaponlist()
     unpack_weaponlist()
     weapon_list = get_weapon_list()
+    keys_exist = os.path.exists("keys.txt") and os.path.getsize("keys.txt") > 0
     asnwer = input("[WOG DUMP] Update decrypting keys? (y/n): ")
-    if asnwer.lower() == "y":
+    if asnwer.lower() == "y" or keys_exist:
         dump_keys_threaded(weapon_list)
     console_log(f"Found {len(weapon_list)} weapons\n")
     asnwer = input("[WOG DUMP] Checking for updates? (y/n): ")
-    if asnwer == "y":
-        download_all(weapon_list)
     keys = load_keys()
-    decrypt_all(keys)
+    if asnwer == "y":
+        download_and_decrypt_all(weapon_list, keys)
+    # if asnwer == "y":
+        # download_all(weapon_list)
+    # keys = load_keys()
+    # decrypt_all(keys)
     console_log("Done")
 
 
