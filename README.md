@@ -8,7 +8,7 @@ This script allows you to download, decrypt and unpack models from the game [Wor
 ## 🔗 Requirements
 - Python 3.10+ 
 - [AssetStudio](https://github.com/Perfare/AssetStudio) - for unpacking assets
-- C compiler - for compile [`xor.c`](https://github.com/hampta/WOG-dump/blob/main/xor.c) (optional)
+- C compiler - for compile [`xor.c`](https://github.com/hampta/WOG-dump/blob/main/xor.c) **(optional)**
 
 ## 🪄 How it works
 1. Download asset with texture atlas and filter weapons from it
@@ -18,7 +18,7 @@ This script allows you to download, decrypt and unpack models from the game [Wor
 
 ## 🧑‍🏭 Usage
 **Windows**
-```bash
+```powershell
 git clone https://github.com/hampta/WOG-dump    # Clone repository
 cd WOG-dump                                     # Go to directory
 pip install -r requirements.txt                 # Install requirements
@@ -33,9 +33,18 @@ pip3 install -r requirements.txt                # Install requirements
 python3 wog_dump.py                             # Run
 ```
 
-- Unpack assets in `decrypted` folder with [AssetStudio](https://github.com/Perfare/AssetStudio)
+#### Unpack assets in `./assets/decrypted` folder with [AssetStudio](https://github.com/Perfare/AssetStudio)
 
 ## ➕ Addtional
+Convert Unity normal maps: 
+```bash
+# Windows
+python convert_normal_map.py <path> 
+
+#Linux 
+python3 convert_normal_map.py <path> 
+```
+
 Use xor decrypter: 
 ```bash
 # Windows 64 bit
@@ -48,14 +57,6 @@ Use xor decrypter:
 ./bin/linux/64bit/xor <encrypted_file> <key> <output_file>
 ```
 
-Convert Unity normal maps: 
-```bash
-# Windows
-python convert_normal_map.py <path> 
-
-#Linux 
-python3 convert_normal_map.py <path> 
-```
 
 ## 🫂 Special thanks
 [DeadZoneGarry](https://github.com/DeadZoneLuna) - helping with decryption
