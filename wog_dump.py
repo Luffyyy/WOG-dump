@@ -72,14 +72,13 @@ class WogDumper:
                 data = obj.read()
                 if data.name == "new_banners":
                     text = data.text.replace("\r", "")
-                    lines = text.split("\n")
-                    lines = [line for line in lines if line != ""]
-                    lines = [
-                        line for line in lines if not line.startswith("#")]
-                    for line in lines:
-                        weapon_list.append(line.split(".png")[0])
-                    weapon_list = self.remove_blacklisted(weapon_list)
-                    self.weapon_list = weapon_list
+        lines = text.split("\n")
+        lines = [line for line in lines if line != ""]
+        lines = [line for line in lines if not line.startswith("#")]
+        for line in lines:
+            weapon_list.append(line.split(".png")[0])
+        weapon_list = self.remove_blacklisted(weapon_list)
+        self.weapon_list = weapon_list
         console_log("Unpacked weapons.txt\n")
 
     def remove_blacklisted(self, weapon_list):
@@ -103,8 +102,7 @@ class WogDumper:
         length = len(data.getbuffer())
         data = length.to_bytes(4, "little") + data.getbuffer()
         headers['Content-Length'] = str(len(data))
-        r = requests.put(
-            "https://eu1.ultimate-disassembly.com/v/query2018.php?soc=steam", data=data, headers=headers)
+        r = requests.put("https://eu1.ultimate-disassembly.com/v/query2018.php?soc=steam", data=data, headers=headers)
         r = r.content[4:]
         r = bz2.decompress(r).decode()
         return r
@@ -133,7 +131,6 @@ class WogDumper:
         console_log(f"Gettings keys {self.weapon_list.index(asset_name) + 1}/{len(self.weapon_list)}\r")
         self.keys.update({asset_name: key})
 
-
     def dump_keys_threaded(self):
         self.executor = ThreadPoolExecutor(max_workers=self.MAX_THREADS)
         self.executor.map(self.get_key_threaded, self.weapon_list)
@@ -150,15 +147,13 @@ class WogDumper:
         r = requests.get(url, stream=True)
         file_size = int(r.headers["Content-Length"])
         if r.status_code != 200:
-            console_log(
-                f"[{current}/{total}] Error downloading {filename}                          \r")
+            console_log(f"[{current}/{total}] Error downloading {filename}                          \r")
             return
         with open(filename, "wb") as f:
             for chunk in r.iter_content(1024):
                 console_log(f"[{current}/{total}] [{round(f.tell()/file_size*100, 2)}% | {round(f.tell()/1024/1024, 2)}MB/{round(file_size/1024/1024, 2)}MB] Downloading {filename} \r")
                 f.write(chunk)
-        console_log(
-            f"[{current}/{total}] Downloaded {filename}                                     \r")
+        console_log(f"[{current}/{total}] Downloaded {filename}                                     \r")
 
     def get_asset_size(self, asset):
         r = requests.head(f"https://data1eu.ultimate-disassembly.com/uni2018/{asset}.unity3d")
@@ -208,16 +203,14 @@ class WogDumper:
         for asset in assets:
             key = keys[asset.split(".")[0]] + "World of Guns: Gun Disassembly"
             key = hashlib.md5(key.encode()).hexdigest()
-            console_log(
-                f"Unpacking and decrypting {assets.index(asset) + 1}/{len(assets)}\r")
+            console_log(f"Unpacking and decrypting {assets.index(asset) + 1}/{len(assets)}\r")
             env = UnityPy.load(f"{self.ASSETS_DIR}/{asset}")
             for obj in env.objects:
                 if obj.type.name == "TextAsset":
                     data = obj.read()
                     if os.path.exists(f"{self.DECRYPTED_DIR}/{data.name}.unity3d"):
                         if os.path.getsize(f"{self.ENCRYPTED_DIR}/{data.name}.bytes") == data.script.nbytes:
-                            console_log(
-                                f"Already decrypted - {data.name}.unity3d\n")
+                            console_log(f"Already decrypted - {data.name}.unity3d\n")
                             continue
                     with open(f"{self.ENCRYPTED_DIR}/{data.name}.bytes", "wb") as f:
                         f.write(bytes(data.script))
@@ -233,8 +226,7 @@ class WogDumper:
                 data = obj.read()
                 if os.path.exists(f"{self.DECRYPTED_DIR}/{data.name}.unity3d"):
                     if os.path.getsize(f"{self.ENCRYPTED_DIR}/{data.name}.bytes") == data.script.nbytes:
-                        console_log(
-                            f"Already decrypted - {data.name}.unity3d\n")
+                        console_log(f"Already decrypted - {data.name}.unity3d\n")
                         return
                 with open(f"{self.ENCRYPTED_DIR}/{data.name}.bytes", "wb") as f:
                     f.write(bytes(data.script))
