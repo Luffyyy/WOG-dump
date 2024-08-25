@@ -1,20 +1,20 @@
-import bz2
-import hashlib
 import os
-import subprocess
+import bz2
 import sys
+import time
+import hashlib
 import platform
+import subprocess
 
 from concurrent.futures import ThreadPoolExecutor
 from io import BytesIO
-import time
 
 import requests
 import UnityPy
 
-ASSETS_DIR = os.path.join(os.path.dirname(__file__), "assets", "raw")
-ENCTYPTED_DIR = os.path.join(os.path.dirname(__file__), "assets", "encrypted")
-DECRYPTED_DIR = os.path.join(os.path.dirname(__file__), "assets", "decrypted")
+ASSETS_DIR = os.path.join(os.path.abspath(os.getcwd()), "assets", "raw")
+ENCTYPTED_DIR = os.path.join(os.path.abspath(os.getcwd()), "assets", "encrypted")
+DECRYPTED_DIR = os.path.join(os.path.abspath(os.getcwd()), "assets", "decrypted")
 MAX_THREADS = 4
 
 system = platform.system().lower()
@@ -27,7 +27,7 @@ if system == "windows":
 
 for dir in [ASSETS_DIR, ENCTYPTED_DIR, DECRYPTED_DIR]:
     if not os.path.exists(dir):
-        os.mkdir(dir)
+        os.makedirs(dir)
 
 
 def console_log(text):

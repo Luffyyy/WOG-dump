@@ -18,7 +18,7 @@ This script allows you to download, decrypt and unpack models from the game [Wor
 
 ## 🧑‍🏭 Usage
 **Windows**
-```powershell
+```bash  
 git clone https://github.com/hampta/WOG-dump    # Clone repository
 cd WOG-dump                                     # Go to directory
 pip install -r requirements.txt                 # Install requirements
@@ -26,7 +26,7 @@ python wog_dump.py                              # Run
 ```
 
 **Linux**
-```bash
+```bash  
 git clone https://github.com/hampta/WOG-dump    # Clone repository
 cd WOG-dump                                     # Go to directory
 pip3 install -r requirements.txt                # Install requirements
