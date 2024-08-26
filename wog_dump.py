@@ -239,7 +239,7 @@ class WogDumper:
         self.unpack_weaponlist()
         keys_exist = os.path.exists("keys.txt") and os.path.getsize("keys.txt") > 0
         answer = input("[WOG DUMP] Update decrypting keys? (y/n): ")
-        if answer.lower() == "y" or keys_exist:
+        if answer.lower() == "y" or not keys_exist:
             self.dump_keys_threaded()
         console_log(f"Found {len(self.weapon_list)} weapons \n")
         answer = input("[WOG DUMP] Checking for updates? (y/n): ")
